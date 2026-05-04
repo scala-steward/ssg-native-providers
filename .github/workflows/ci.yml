@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: coursier/cache-action@v8
+      - uses: coursier/setup-action@v3.0.0
+        with:
+          jvm: 'temurin:1.22'
+          apps: sbt
+
+      - name: Download tree-sitter-natives release
+        id: download
+        continue-on-error: true
+        run: scripts/download-release.sh "$TREE_SITTER_NATIVES_VERSION"
+        env:
+          TREE_SITTER_NATIVES_VERSION: v0.1.0
+
+      - name: Verify sbt loads
+        run: sbt projects
+
+      - name: Package & verify JARs
+        if: steps.download.outcome == 'success'
+        run: |
+          sbt packageBin
+          scripts/verify-jars.sh

@@ -1,0 +1,15 @@
+{
+  "provider-schema-version": "0.1.0",
+  "provider-name": "tree-sitter-desktop",
+  "configs": [
+    {
+      "config-name": "tree_sitter_all",
+      "linux-x86_64":    { "binary": "libtree_sitter_all.so" },
+      "linux-aarch64":   { "binary": "libtree_sitter_all.so" },
+      "macos-x86_64":    { "binary": "libtree_sitter_all.dylib" },
+      "macos-aarch64":   { "binary": "libtree_sitter_all.dylib" },
+      "windows-x86_64":  { "binary": "tree_sitter_all.dll" },
+      "windows-aarch64": { "binary": "tree_sitter_all.dll" }
+    }
+  ]
+}
