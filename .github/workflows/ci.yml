@@ -29,7 +29,7 @@ jobs:
         continue-on-error: true
         run: scripts/download-release.sh "$TREE_SITTER_NATIVES_VERSION"
         env:
-          TREE_SITTER_NATIVES_VERSION: v0.1.0
+          TREE_SITTER_NATIVES_VERSION: 0.26.8
 
       - name: Verify sbt loads
         run: sbt projects

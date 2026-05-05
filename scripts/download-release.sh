@@ -2,8 +2,8 @@
 # Downloads tree-sitter-natives release artifacts and unpacks them into native/.
 #
 # Usage:
-#   scripts/download-release.sh <version>
-#   scripts/download-release.sh v0.1.0
+#   scripts/download-release.sh <tag>
+#   scripts/download-release.sh 0.26.8
 #
 # Requires: curl, tar, unzip
 
