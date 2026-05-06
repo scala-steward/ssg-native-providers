@@ -4,8 +4,8 @@
   "configs": [
     {
       "config-name": "tree_sitter_all",
-      "linux-x86_64":    { "binary": "libtree_sitter_all.a", "flags-groups": [["-lstdc++"], ["-lpthread"], ["-ldl"], ["-lm"]] },
-      "linux-aarch64":   { "binary": "libtree_sitter_all.a", "flags-groups": [["-lstdc++"], ["-lpthread"], ["-ldl"], ["-lm"]] },
+      "linux-x86_64":    { "binary": "libtree_sitter_all.a", "flags-groups": [["-lc++"], ["-lpthread"], ["-ldl"], ["-lm"]] },
+      "linux-aarch64":   { "binary": "libtree_sitter_all.a", "flags-groups": [["-lc++"], ["-lpthread"], ["-ldl"], ["-lm"]] },
       "macos-x86_64":    { "binary": "libtree_sitter_all.a", "flags-groups": [["-lc++"]] },
       "macos-aarch64":   { "binary": "libtree_sitter_all.a", "flags-groups": [["-lc++"]] },
       "windows-x86_64":  { "binary": "tree_sitter_all.lib",  "flags-groups": [["-lntdll"], ["-lmsvcrt"]] },
