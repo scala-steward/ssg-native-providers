@@ -1,4 +1,5 @@
 import kubuszok.sbt._
+import sbtwelcome.UsefulTask
 import kubuszok.sbt.KubuszokPlugin.autoImport._
 import multiarch.core.Platform
 
@@ -56,6 +57,7 @@ val providerSettings = Seq(
 
 lazy val root = project
   .in(file("."))
+  .enablePlugins(KubuszokRootPlugin)
   .settings(publishSettings *)
   .settings(noPublishSettings *)
   .aggregate(
@@ -65,7 +67,13 @@ lazy val root = project
     `tree-sitter-queries`
   )
   .settings(
-    name := "ssg-native-providers-root"
+    name := "ssg-native-providers-root",
+    logo := s"ssg-native-providers ${version.value}",
+    usefulTasks := Seq(
+      UsefulTask("compile", "Compile all provider JARs").noAlias,
+      UsefulTask("publishLocal", "Publish all providers locally").noAlias,
+      UsefulTask("ci-release", "Publish snapshot or release (based on git tags)").noAlias
+    )
   )
 
 // ── Scala Native provider (static libraries) ─────────────────────────
@@ -89,6 +97,7 @@ lazy val `sn-provider-tree-sitter` = project
 
 lazy val `pnm-provider-tree-sitter-desktop` = project
   .in(file("providers/pnm-provider-tree-sitter-desktop"))
+  .enablePlugins(KubuszokRootPlugin)
   .settings(publishSettings *)
   .settings(providerSettings *)
   .settings(
@@ -107,6 +116,7 @@ lazy val `pnm-provider-tree-sitter-desktop` = project
 
 lazy val `wasm-provider-tree-sitter` = project
   .in(file("providers/wasm-provider-tree-sitter"))
+  .enablePlugins(KubuszokRootPlugin)
   .settings(publishSettings *)
   .settings(providerSettings *)
   .settings(
@@ -134,6 +144,7 @@ lazy val `wasm-provider-tree-sitter` = project
 
 lazy val `tree-sitter-queries` = project
   .in(file("providers/tree-sitter-queries"))
+  .enablePlugins(KubuszokRootPlugin)
   .settings(publishSettings *)
   .settings(providerSettings *)
   .settings(
