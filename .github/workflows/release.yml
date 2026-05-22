@@ -3,10 +3,17 @@ name: Sonatype Release
 on:
   push:
     branches: [master]
-    tags: ['*']
+    tags: ["*"]
   pull_request:
     branches: [master]
-  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JVM_VERSION: "zulu:25"
 
 jobs:
   build-and-publish:
@@ -17,12 +24,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          submodules: false
           fetch-depth: 0
 
       - uses: coursier/cache-action@v8
+      - name: Import GPG key for signing the release
+        uses: crazy-max/ghaction-import-gpg@v7
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - uses: coursier/setup-action@v3.0.0
         with:
-          jvm: 'temurin:1.22'
+          jvm: ${{ env.JVM_VERSION }}
           apps: sbt
 
       - name: Download tree-sitter-natives release
@@ -31,12 +44,6 @@ jobs:
         run: scripts/download-release.sh "$TREE_SITTER_NATIVES_VERSION"
         env:
           TREE_SITTER_NATIVES_VERSION: 0.26.8
-
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v7
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Publish
         run: sbt ci-release

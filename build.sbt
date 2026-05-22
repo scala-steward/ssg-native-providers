@@ -1,5 +1,5 @@
-import kubuszok.sbt._
 import sbtwelcome.UsefulTask
+import kubuszok.sbt._
 import kubuszok.sbt.KubuszokPlugin.autoImport._
 import multiarch.core.Platform
 
@@ -24,7 +24,7 @@ val publishSettings = Seq(
       <url>https://github.com/kubuszok/ssg-native-providers/issues</url>
     </issueManagement>
   ),
-  projectType := ProjectType.ScalaLibrary
+  projectType := ProjectType.JarOnly
 )
 
 val noPublishSettings =
@@ -58,13 +58,11 @@ val providerSettings = Seq(
 lazy val root = project
   .in(file("."))
   .enablePlugins(KubuszokRootPlugin)
-  .settings(publishSettings *)
-  .settings(noPublishSettings *)
   .aggregate(
-    `sn-provider-tree-sitter`,
     `pnm-provider-tree-sitter-desktop`,
-    `wasm-provider-tree-sitter`,
-    `tree-sitter-queries`
+    `sn-provider-tree-sitter`,
+    `tree-sitter-queries`,
+    `wasm-provider-tree-sitter`
   )
   .settings(
     name := "ssg-native-providers-root",
@@ -74,6 +72,25 @@ lazy val root = project
       UsefulTask("publishLocal", "Publish all providers locally").noAlias,
       UsefulTask("ci-release", "Publish snapshot or release (based on git tags)").noAlias
     )
+  )
+  .settings(noPublishSettings)
+
+// ── JVM/Panama provider (shared libraries) ───────────────────────────
+
+lazy val `pnm-provider-tree-sitter-desktop` = project
+  .in(file("providers/pnm-provider-tree-sitter-desktop"))
+  .settings(publishSettings *)
+  .settings(providerSettings *)
+  .settings(
+    name := "pnm-provider-tree-sitter-desktop",
+    Compile / packageBin / mappings ++= {
+      val cross = crossDir.value
+      val libs = Set(
+        "libtree_sitter_all.dylib", "libtree_sitter_all.so",
+        "tree_sitter_all.dll", "tree_sitter_all.dll.lib"
+      )
+      fatJarMappings(cross, Platform.desktop, libs.contains)
+    }
   )
 
 // ── Scala Native provider (static libraries) ─────────────────────────
@@ -93,22 +110,23 @@ lazy val `sn-provider-tree-sitter` = project
     }
   )
 
-// ── JVM/Panama provider (shared libraries) ───────────────────────────
+// ── Query files (.scm, platform-independent) ─────────────────────────
 
-lazy val `pnm-provider-tree-sitter-desktop` = project
-  .in(file("providers/pnm-provider-tree-sitter-desktop"))
-  .enablePlugins(KubuszokRootPlugin)
+lazy val `tree-sitter-queries` = project
+  .in(file("providers/tree-sitter-queries"))
   .settings(publishSettings *)
   .settings(providerSettings *)
   .settings(
-    name := "pnm-provider-tree-sitter-desktop",
+    name := "tree-sitter-queries",
     Compile / packageBin / mappings ++= {
-      val cross = crossDir.value
-      val libs = Set(
-        "libtree_sitter_all.dylib", "libtree_sitter_all.so",
-        "tree_sitter_all.dll", "tree_sitter_all.dll.lib"
-      )
-      fatJarMappings(cross, Platform.desktop, libs.contains)
+      val queriesDir = (ThisBuild / baseDirectory).value / "native" / "queries"
+      if (queriesDir.exists()) {
+        val langDirs = sbt.IO.listFiles(queriesDir).filter(_.isDirectory)
+        langDirs.flatMap { langDir =>
+          sbt.IO.listFiles(langDir).filter(f => f.isFile && f.getName.endsWith(".scm"))
+            .map(f => f -> s"queries/${langDir.getName}/${f.getName}")
+        }.toSeq
+      } else Seq.empty
     }
   )
 
@@ -116,7 +134,6 @@ lazy val `pnm-provider-tree-sitter-desktop` = project
 
 lazy val `wasm-provider-tree-sitter` = project
   .in(file("providers/wasm-provider-tree-sitter"))
-  .enablePlugins(KubuszokRootPlugin)
   .settings(publishSettings *)
   .settings(providerSettings *)
   .settings(
@@ -136,27 +153,6 @@ lazy val `wasm-provider-tree-sitter` = project
           else Seq.empty
         }
         core ++ grammars
-      } else Seq.empty
-    }
-  )
-
-// ── Query files (.scm, platform-independent) ─────────────────────────
-
-lazy val `tree-sitter-queries` = project
-  .in(file("providers/tree-sitter-queries"))
-  .enablePlugins(KubuszokRootPlugin)
-  .settings(publishSettings *)
-  .settings(providerSettings *)
-  .settings(
-    name := "tree-sitter-queries",
-    Compile / packageBin / mappings ++= {
-      val queriesDir = (ThisBuild / baseDirectory).value / "native" / "queries"
-      if (queriesDir.exists()) {
-        val langDirs = sbt.IO.listFiles(queriesDir).filter(_.isDirectory)
-        langDirs.flatMap { langDir =>
-          sbt.IO.listFiles(langDir).filter(f => f.isFile && f.getName.endsWith(".scm"))
-            .map(f => f -> s"queries/${langDir.getName}/${f.getName}")
-        }.toSeq
       } else Seq.empty
     }
   )
