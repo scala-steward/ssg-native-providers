@@ -1,8 +1,8 @@
-// kubuszok plugin (bundles: sbt-git, sbt-pgp, sbt-sonatype, sbt-welcome, and more)
-addSbtPlugin("com.kubuszok" % "sbt-kubuszok" % "0.2.1")
+// kubuszok plugin (bundles: sbt-git, sbt-pgp, sbt-scalafmt, and more)
+addSbtPlugin("com.kubuszok" % "sbt-kubuszok" % "0.2.3")
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 // multiarch-core Platform model (used in build.sbt for platform definitions)
 resolvers += "Maven Central Snapshots" at "https://central.sonatype.com/repository/maven-snapshots/"
-libraryDependencies += "com.kubuszok" %% "multiarch-core" % "0.2.0"
+libraryDependencies += "com.kubuszok" %% "multiarch-core" % "0.3.0"

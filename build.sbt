@@ -1,4 +1,3 @@
-import sbtwelcome.UsefulTask
 import kubuszok.sbt._
 import kubuszok.sbt.KubuszokPlugin.autoImport._
 import multiarch.core.Platform
@@ -36,12 +35,21 @@ val noPublishSettings =
 val crossDir = settingKey[File]("Root directory containing cross-compiled native artifacts")
 ThisBuild / crossDir := (ThisBuild / baseDirectory).value / "native" / "cross"
 
-/** Create fat JAR mappings: native/<platform-classifier>/<file> for matching files. */
-def fatJarMappings(crossRoot: File, platforms: Seq[Platform], fileFilter: String => Boolean): Seq[(File, String)] =
+/** Create fat JAR mappings: native/<platform-classifier>/<file> for matching files.
+  * sbt 2.0 packageBin mappings are keyed by xsbti.HashedVirtualFileRef, so each File is
+  * converted through the build's FileConverter.
+  */
+def fatJarMappings(
+    conv: xsbti.FileConverter,
+    crossRoot: File,
+    platforms: Seq[Platform],
+    fileFilter: String => Boolean
+): Seq[(xsbti.HashedVirtualFileRef, String)] =
   platforms.flatMap { p =>
     val dir = crossRoot / p.classifier
     if (dir.exists())
-      sbt.IO.listFiles(dir).filter(f => f.isFile && fileFilter(f.getName)).map(f => f -> s"native/${p.classifier}/${f.getName}").toSeq
+      sbt.IO.listFiles(dir).filter(f => f.isFile && fileFilter(f.getName))
+        .map(f => (conv.toVirtualFile(f.toPath): xsbti.HashedVirtualFileRef) -> s"native/${p.classifier}/${f.getName}").toSeq
     else Seq.empty
   }
 
@@ -65,13 +73,7 @@ lazy val root = project
     `wasm-provider-tree-sitter`
   )
   .settings(
-    name := "ssg-native-providers-root",
-    logo := s"ssg-native-providers ${version.value}",
-    usefulTasks := Seq(
-      UsefulTask("compile", "Compile all provider JARs").noAlias,
-      UsefulTask("publishLocal", "Publish all providers locally").noAlias,
-      UsefulTask("ci-release", "Publish snapshot or release (based on git tags)").noAlias
-    )
+    name := "ssg-native-providers-root"
   )
   .settings(noPublishSettings)
 
@@ -85,11 +87,12 @@ lazy val `pnm-provider-tree-sitter-desktop` = project
     name := "pnm-provider-tree-sitter-desktop",
     Compile / packageBin / mappings ++= {
       val cross = crossDir.value
+      val conv = fileConverter.value
       val libs = Set(
         "libtree_sitter_all.dylib", "libtree_sitter_all.so",
         "tree_sitter_all.dll", "tree_sitter_all.dll.lib"
       )
-      fatJarMappings(cross, Platform.desktop, libs.contains)
+      fatJarMappings(conv, cross, Platform.desktop, libs.contains)
     }
   )
 
@@ -103,10 +106,11 @@ lazy val `sn-provider-tree-sitter` = project
     name := "sn-provider-tree-sitter",
     Compile / packageBin / mappings ++= {
       val cross = crossDir.value
+      val conv = fileConverter.value
       val libs = Set(
         "libtree_sitter_all.a", "tree_sitter_all.lib"
       )
-      fatJarMappings(cross, Platform.desktop, libs.contains)
+      fatJarMappings(conv, cross, Platform.desktop, libs.contains)
     }
   )
 
@@ -119,14 +123,15 @@ lazy val `tree-sitter-queries` = project
   .settings(
     name := "tree-sitter-queries",
     Compile / packageBin / mappings ++= {
+      val conv = fileConverter.value
       val queriesDir = (ThisBuild / baseDirectory).value / "native" / "queries"
       if (queriesDir.exists()) {
         val langDirs = sbt.IO.listFiles(queriesDir).filter(_.isDirectory)
         langDirs.flatMap { langDir =>
           sbt.IO.listFiles(langDir).filter(f => f.isFile && f.getName.endsWith(".scm"))
-            .map(f => f -> s"queries/${langDir.getName}/${f.getName}")
+            .map(f => (conv.toVirtualFile(f.toPath): xsbti.HashedVirtualFileRef) -> s"queries/${langDir.getName}/${f.getName}")
         }.toSeq
-      } else Seq.empty
+      } else Seq.empty[(xsbti.HashedVirtualFileRef, String)]
     }
   )
 
@@ -139,20 +144,21 @@ lazy val `wasm-provider-tree-sitter` = project
   .settings(
     name := "wasm-provider-tree-sitter",
     Compile / packageBin / mappings ++= {
+      val conv = fileConverter.value
       val wasmDir = (ThisBuild / baseDirectory).value / "native" / "wasm"
       if (wasmDir.exists()) {
         val core = Seq("web-tree-sitter.js", "web-tree-sitter.wasm")
           .map(f => wasmDir / f)
           .filter(_.exists())
-          .map(f => f -> s"wasm/${f.getName}")
+          .map(f => (conv.toVirtualFile(f.toPath): xsbti.HashedVirtualFileRef) -> s"wasm/${f.getName}")
         val grammars = {
           val gDir = wasmDir / "grammars"
           if (gDir.exists())
             sbt.IO.listFiles(gDir).filter(f => f.isFile && f.getName.endsWith(".wasm"))
-              .map(f => f -> s"wasm/grammars/${f.getName}").toSeq
-          else Seq.empty
+              .map(f => (conv.toVirtualFile(f.toPath): xsbti.HashedVirtualFileRef) -> s"wasm/grammars/${f.getName}").toSeq
+          else Seq.empty[(xsbti.HashedVirtualFileRef, String)]
         }
         core ++ grammars
-      } else Seq.empty
+      } else Seq.empty[(xsbti.HashedVirtualFileRef, String)]
     }
   )
