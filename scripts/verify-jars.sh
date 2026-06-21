@@ -35,7 +35,7 @@ check_jar() {
 }
 
 echo "=== Verifying sn-provider-tree-sitter ==="
-SN_JAR=$(find "$ROOT_DIR/providers/sn-provider-tree-sitter/target" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | head -1)
+SN_JAR=$(find "$ROOT_DIR/target/out/jvm/u/sn-provider-tree-sitter" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | sort | tail -1)
 if [ -n "$SN_JAR" ]; then
   check_jar "$SN_JAR" \
     "native/linux-x86_64/libtree_sitter_all.a" \
@@ -51,7 +51,7 @@ fi
 
 echo ""
 echo "=== Verifying pnm-provider-tree-sitter-desktop ==="
-PNM_JAR=$(find "$ROOT_DIR/providers/pnm-provider-tree-sitter-desktop/target" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | head -1)
+PNM_JAR=$(find "$ROOT_DIR/target/out/jvm/u/pnm-provider-tree-sitter-desktop" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | sort | tail -1)
 if [ -n "$PNM_JAR" ]; then
   check_jar "$PNM_JAR" \
     "native/linux-x86_64/libtree_sitter_all.so" \
@@ -67,7 +67,7 @@ fi
 
 echo ""
 echo "=== Verifying wasm-provider-tree-sitter ==="
-WASM_JAR=$(find "$ROOT_DIR/providers/wasm-provider-tree-sitter/target" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | head -1)
+WASM_JAR=$(find "$ROOT_DIR/target/out/jvm/u/wasm-provider-tree-sitter" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | sort | tail -1)
 if [ -n "$WASM_JAR" ]; then
   check_jar "$WASM_JAR" \
     "wasm/web-tree-sitter.js" \
@@ -79,7 +79,7 @@ fi
 
 echo ""
 echo "=== Verifying tree-sitter-queries ==="
-QUERIES_JAR=$(find "$ROOT_DIR/providers/tree-sitter-queries/target" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | head -1)
+QUERIES_JAR=$(find "$ROOT_DIR/target/out/jvm/u/tree-sitter-queries" -name '*.jar' -not -name '*-sources*' -not -name '*-javadoc*' 2>/dev/null | sort | tail -1)
 if [ -n "$QUERIES_JAR" ]; then
   check_jar "$QUERIES_JAR" \
     "queries/rust/highlights.scm" \
