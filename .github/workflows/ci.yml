@@ -24,7 +24,7 @@ jobs:
           submodules: false
 
       - uses: coursier/cache-action@v8
-      - uses: coursier/setup-action@v3.0.2
+      - uses: coursier/setup-action@v3.0.3
         with:
           jvm: ${{ env.JVM_VERSION }}
           apps: sbt
